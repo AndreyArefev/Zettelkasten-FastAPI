@@ -27,9 +27,11 @@ def get_ideas(
 ):
     return ideas_service.get_many(user.id)
 
+
+
 @router.post(
     '/',
-    response_model=List[models.IdeaSchema],
+    response_model=models.IdeaCreate,
     status_code=status.HTTP_201_CREATED,
 )
 def create_idea(
@@ -58,7 +60,7 @@ def get_idea(
     )
 
 @router.get(
-    '/{tag_name}',
+    '/tags/{tag_name}',
     response_model=models.TagSchema,
 )
 def get_by_tag(
@@ -72,15 +74,15 @@ def get_by_tag(
     )
 
 @router.get(
-    '/{word}',
-    response_model=models.IdeaSchema,
+    '/idea_search/{word}',
+    response_model=List[models.IdeaSchema],
 )
 def get_by_word(
         word: str,
         user: models.User = Depends(get_current_user),
         ideas_service: IdeasService = Depends(),
 ):
-    return ideas_service.get_by_tag(
+    return ideas_service.get_by_word(
         user.id,
         word,
     )

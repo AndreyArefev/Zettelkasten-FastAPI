@@ -6,6 +6,8 @@ from datetime import date
 class TagBase(BaseModel):
     tag_name: str
 
+    class Config:
+        orm_mode = True
 
 class Tag(TagBase):
     id: int
@@ -19,10 +21,15 @@ class IdeaBase(BaseModel):
     idea_text: str
     data_create: date
     child_id: int
+    class Config:
+        orm_mode = True
 
 
 class IdeaSchema(IdeaBase):
     tags: List[TagBase]
+
+    class Config:
+        orm_mode = True
 
 
 class Idea(IdeaSchema):
@@ -34,6 +41,9 @@ class Idea(IdeaSchema):
 
 class TagSchema(TagBase):
     ideas: List[IdeaBase]
+
+    class Config:
+        orm_mode = True
 
 
 class IdeaCreate(IdeaSchema):

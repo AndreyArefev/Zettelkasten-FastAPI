@@ -34,7 +34,7 @@ class IdeasService:
         )
         return ideas
 
-    def get_by_tag(self, user_id: int, tag: str) -> List[tables.Tag]:
+    def get_by_tag(self, user_id: int, tag: str) -> Optional[tables.Tag]:
         ideas = (
             self.session
             .query(tables.Tag)
@@ -42,10 +42,9 @@ class IdeasService:
                 tables.Tag.user_id == user_id,
                 tables.Tag.tag_name == tag
             )
-            .order_by(tables.Tag.id.desc())
-            .all()
+            .first()
         )
-        if not tag:
+        if not ideas:
             raise HTTPException(status.HTTP_404_NOT_FOUND)
         return ideas
 
@@ -55,14 +54,18 @@ class IdeasService:
             .query(tables.Idea)
             .filter(
                 tables.Idea.user_id == user_id,
-                tables.Idea.idea_text.in_(word)
+                tables.Idea.idea_text.contains(word)
             )
             .order_by(
-                tables.Idea.date.desc(),
+                tables.Idea.data_create.desc(),
                 tables.Idea.id.desc(),
             )
             .all()
         )
+
+
+        if not ideas:
+            raise HTTPException(status.HTTP_404_NOT_FOUND)
         return ideas
 
     def get(
