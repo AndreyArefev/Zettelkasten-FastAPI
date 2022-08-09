@@ -39,7 +39,7 @@ def create_idea(
     user: models.User = Depends(get_current_user),
     ideas_service: IdeasService = Depends(),
 ):
-    return ideas_service.create(
+    return ideas_service.create_idea(
         user.id,
         idea_data,
     )

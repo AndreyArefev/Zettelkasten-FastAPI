@@ -7,6 +7,7 @@ from fastapi import (
     Depends,
     HTTPException,
     status,
+    requests,
 )
 from sqlalchemy.orm import Session
 
@@ -76,18 +77,47 @@ class IdeasService:
         idea = self._get(user_id, idea_id)
         return idea
 
-    def create(
-        self,
-        user_id: int,
-        idea_data: models.IdeaCreate,
+
+
+    def create_idea(
+            self,
+            user_id: int,
+            idea_data: models.IdeaCreate,
     ) -> tables.Idea:
         idea = tables.Idea(
-            **idea_data.dict(),
+            idea_name = idea_data.idea_name,
+            idea_text = idea_data.idea_text,
+            data_create = idea_data.data_create,
+            child_id = idea_data.child_id,
             user_id=user_id,
         )
+        tags = [i.tag_name for i in idea_data.tags]
+        print (tags)
+        for tag_name in tags:
+            # Определим существует ли тег
+            teg_in_db = (
+                self.session
+                .query(tables.Tag)
+                .filter(
+                tables.Tag.user_id==user_id,
+                tables.Tag.tag_name==tag_name
+            )
+            .first()
+            )
+            # если существует, то добавляем к заметке тег
+            if teg_in_db:
+                idea.tags.append(teg_in_db)
+            # если не существует, то добавляем тег в таблицу тегов
+            else:
+                c = tables.Tag(user_id=user_id, tag_name=tag_name)
+                self.session.add(c)
+                self.session.flush()
+                idea.tags.append(c)
+
         self.session.add(idea)
         self.session.commit()
         return idea
+
 
     def update(self,
         user_id: int,
@@ -122,3 +152,4 @@ class IdeasService:
         if not idea:
             raise HTTPException(status.HTTP_404_NOT_FOUND)
         return idea
+
