@@ -19,7 +19,7 @@ router = APIRouter(
 
 @router.get(
     '/',
-    response_model=List[models.IdeaSchema],
+    response_model=List[models.Idea],
 )
 def get_ideas(
     user: models.User = Depends(get_current_user),
