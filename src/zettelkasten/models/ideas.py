@@ -18,24 +18,29 @@ class Tag(TagBase):
 
 class IdeaBase(BaseModel):
     idea_name: str
-    idea_text: str
-    child_id: Optional[int] = None
 
     class Config:
         orm_mode = True
 
-class IdeaSchema(IdeaBase):
+class IdeaText(IdeaBase):
+    idea_text: str
+
+class IdeaSchema(IdeaText):
     tags: List[TagBase]
+    children: List[IdeaBase]
 
 
 class IdeaCreate(IdeaSchema):
     data_create: Optional[date] = None
 
+
 class IdeaUpdate(IdeaSchema):
     data_update: Optional[date] = None
 
+
 class Idea(IdeaUpdate, IdeaCreate):
     id: int
+
 
 
 class TagSchema(TagBase):

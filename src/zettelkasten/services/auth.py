@@ -13,6 +13,7 @@ from jose import (
     JWTError,
     jwt,
 )
+from typing import Optional
 from passlib.hash import bcrypt
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -87,15 +88,19 @@ class AuthService:
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
+
     def register_new_user(
         self,
         user_data: models.UserCreate,
     ) -> models.Token:
+        self.checking_for_unique(user_data.username, user_data.email)
         user = tables.User(
             email=user_data.email,
             username=user_data.username,
             password_hash=self.hash_password(user_data.password),
-        )
+            )
+
+
         self.session.add(user)
         self.session.commit()
         return self.create_token(user)
@@ -125,3 +130,30 @@ class AuthService:
             raise exception
 
         return self.create_token(user)
+
+    def checking_for_unique(self,
+                            username: str,
+                            email: str,
+    ) -> Optional[tables.User]:
+        checking_username = (
+            self.session
+            .query(tables.User)
+            .filter(
+                tables.User.username == username,
+             )
+            .first()
+        )
+        checking_email = (
+            self.session
+            .query(tables.User)
+            .filter(
+                tables.User.email == email,
+            )
+            .first()
+        )
+        if checking_username or checking_email:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail = 'Имя пользователя или e-mail уже используются, выберите другие',
+            headers = {'WWW-Authenticate': 'Bearer'},
+            )
+        return checking_username, checking_email

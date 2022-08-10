@@ -84,7 +84,7 @@ class IdeasService:
             idea_name = idea_data.idea_name,
             idea_text = idea_data.idea_text,
             data_create = idea_data.data_create,
-            child_id = idea_data.child_id,
+            #child_id = idea_data.child_id,
             user_id=user_id,
         )
         self.tag_get_and_create(
@@ -92,6 +92,13 @@ class IdeasService:
             idea_data,
             idea,
         )
+        self.children_get_and_create(
+            user_id,
+            idea_data,
+            idea,
+        )
+        #можно было сделать одну функцию 'get_and_create' на children и tag что-бы избавится от повторения кода
+        #но решил на две разделить для последующей модификации каждой
         self.session.add(idea)
         self.session.commit()
         return idea
@@ -143,6 +150,9 @@ class IdeasService:
             user_id: int,
             idea_data: models.IdeaCreate,
             idea: tables.Idea,
+            name: str,
+            list_names: list,
+            table_name: tables,
     ) -> tables.Idea:
         tags = [i.tag_name for i in idea_data.tags]
         for tag_name in tags:
@@ -165,5 +175,34 @@ class IdeasService:
                 self.session.add(c)
                 self.session.flush()
                 idea.tags.append(c)
+        return idea
+
+    def children_get_and_create(
+            self,
+            user_id: int,
+            idea_data: models.IdeaCreate,
+            idea: tables.Idea,
+    ) -> tables.Idea:
+        children = [i.idea_name for i in idea_data.children]
+        for idea_name in children:
+            # Определим существует ли тег
+            idea_in_db = (
+                self.session
+                .query(tables.Idea)
+                .filter(
+                    tables.Idea.user_id == user_id,
+                    tables.Idea.idea_name == idea_name
+                )
+                .first()
+            )
+            # если существует, то добавляем к заметке связанную идею
+            if idea_in_db:
+                idea.children.append(idea_in_db)
+            # если не существует, то добавляем пустую идею в таблицу идей
+            else:
+                c = tables.Idea(user_id=user_id, idea_name=idea_name, idea_text='', data_create=idea_data.data_create)
+                self.session.add(c)
+                self.session.flush()
+                idea.children.append(c)
         return idea
 

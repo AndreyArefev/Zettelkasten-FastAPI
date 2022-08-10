@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     server_host: str = '127.0.0.1'
     server_port: int = 5000
 
-    database_url: str = 'sqlite:///./db.sqlite'
+    database_url: str = 'sqlite:///../db.sqlite'
 
     jwt_secret: str ='secret'
     jwt_algorithm: str = 'HS256'

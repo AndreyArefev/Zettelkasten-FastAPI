@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr, EmailStr, validator, ValidationError
 
 
 class BaseUser(BaseModel):
-    email: str
-    username: str
+    email: EmailStr
+    username: constr(max_length=120)
 
 
 class UserCreate(BaseUser):
