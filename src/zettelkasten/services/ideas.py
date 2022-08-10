@@ -63,8 +63,6 @@ class IdeasService:
             )
             .all()
         )
-
-
         if not ideas:
             raise HTTPException(status.HTTP_404_NOT_FOUND)
         return ideas
@@ -76,8 +74,6 @@ class IdeasService:
     ) -> tables.Idea:
         idea = self._get(user_id, idea_id)
         return idea
-
-
 
     def create_idea(
             self,
@@ -91,33 +87,14 @@ class IdeasService:
             child_id = idea_data.child_id,
             user_id=user_id,
         )
-        tags = [i.tag_name for i in idea_data.tags]
-        print (tags)
-        for tag_name in tags:
-            # Определим существует ли тег
-            teg_in_db = (
-                self.session
-                .query(tables.Tag)
-                .filter(
-                tables.Tag.user_id==user_id,
-                tables.Tag.tag_name==tag_name
-            )
-            .first()
-            )
-            # если существует, то добавляем к заметке тег
-            if teg_in_db:
-                idea.tags.append(teg_in_db)
-            # если не существует, то добавляем тег в таблицу тегов
-            else:
-                c = tables.Tag(user_id=user_id, tag_name=tag_name)
-                self.session.add(c)
-                self.session.flush()
-                idea.tags.append(c)
-
+        self.tag_get_and_create(
+            user_id,
+            idea_data,
+            idea,
+        )
         self.session.add(idea)
         self.session.commit()
         return idea
-
 
     def update(self,
         user_id: int,
@@ -126,7 +103,15 @@ class IdeasService:
     ) -> tables.Idea:
         idea = self._get(user_id, idea_id)
         for field, value in idea_data:
-            setattr(idea, field, value)
+            if field != 'tags':
+                setattr(idea, field, value)
+            else:
+                setattr(idea, field, [])
+                self.tag_get_and_create(
+                user_id,
+                idea_data,
+                idea,
+            )
         self.session.commit()
         return idea
 
@@ -135,7 +120,7 @@ class IdeasService:
         user_id: int,
         idea_id: int,
     ):
-        operation = self._get(user_id, idea_id)
+        idea = self._get(user_id, idea_id)
         self.session.delete(idea)
         self.session.commit()
 
@@ -151,5 +136,34 @@ class IdeasService:
         )
         if not idea:
             raise HTTPException(status.HTTP_404_NOT_FOUND)
+        return idea
+
+    def tag_get_and_create(
+            self,
+            user_id: int,
+            idea_data: models.IdeaCreate,
+            idea: tables.Idea,
+    ) -> tables.Idea:
+        tags = [i.tag_name for i in idea_data.tags]
+        for tag_name in tags:
+            # Определим существует ли тег
+            teg_in_db = (
+                self.session
+                .query(tables.Tag)
+                .filter(
+                    tables.Tag.user_id == user_id,
+                    tables.Tag.tag_name == tag_name
+                )
+                .first()
+            )
+            # если существует, то добавляем к заметке тег
+            if teg_in_db:
+                idea.tags.append(teg_in_db)
+            # если не существует, то добавляем тег в таблицу тегов
+            else:
+                c = tables.Tag(user_id=user_id, tag_name=tag_name)
+                self.session.add(c)
+                self.session.flush()
+                idea.tags.append(c)
         return idea
 

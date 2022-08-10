@@ -31,7 +31,7 @@ def get_ideas(
 
 @router.post(
     '/',
-    response_model=models.IdeaCreate,
+    response_model=models.Idea,
     status_code=status.HTTP_201_CREATED,
 )
 def create_idea(
@@ -47,7 +47,7 @@ def create_idea(
 
 @router.get(
     '/{idea_id}',
-    response_model=models.IdeaSchema,
+    response_model=models.Idea,
 )
 def get_idea(
     idea_id: int,
@@ -75,7 +75,7 @@ def get_by_tag(
 
 @router.get(
     '/idea_search/{word}',
-    response_model=List[models.IdeaSchema],
+    response_model=List[models.Idea],
 )
 def get_by_word(
         word: str,
@@ -90,7 +90,7 @@ def get_by_word(
 
 @router.put(
     '/{idea_id}',
-    response_model=models.IdeaSchema,
+    response_model=models.IdeaUpdate,
 )
 def update_idea(
     idea_id: int,

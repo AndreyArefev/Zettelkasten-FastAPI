@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from datetime import date
 
@@ -19,38 +19,33 @@ class Tag(TagBase):
 class IdeaBase(BaseModel):
     idea_name: str
     idea_text: str
-    data_create: date
-    child_id: int
+    child_id: Optional[int] = None
+
     class Config:
         orm_mode = True
-
 
 class IdeaSchema(IdeaBase):
     tags: List[TagBase]
 
-    class Config:
-        orm_mode = True
 
+class IdeaCreate(IdeaSchema):
+    data_create: Optional[date] = None
 
-class Idea(IdeaSchema):
+class IdeaUpdate(IdeaSchema):
+    data_update: Optional[date] = None
+
+class Idea(IdeaUpdate, IdeaCreate):
     id: int
-
-    class Config:
-        orm_mode = True
 
 
 class TagSchema(TagBase):
-    ideas: List[IdeaBase]
+    ideas: List[Idea]
 
     class Config:
         orm_mode = True
 
 
-class IdeaCreate(IdeaSchema):
-    pass
 
-class IdeaUpdate(IdeaSchema):
-    data_update: date
 
 
 
