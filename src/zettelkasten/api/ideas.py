@@ -74,7 +74,7 @@ def get_by_tag(
     )
 
 @router.get(
-    '/idea_search/{word}',
+    '/search_word/{word}',
     response_model=List[models.Idea],
 )
 def get_by_word(
@@ -87,6 +87,19 @@ def get_by_word(
         word,
     )
 
+@router.get(
+    '/search_name/{name}',
+    response_model=models.Idea,
+)
+def get_by_name(
+        name: str,
+        user: models.User = Depends(get_current_user),
+        ideas_service: IdeasService = Depends(),
+):
+    return ideas_service.get_by_name(
+        user.id,
+        name,
+    )
 
 @router.put(
     '/{idea_id}',

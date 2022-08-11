@@ -67,6 +67,25 @@ class IdeasService:
             raise HTTPException(status.HTTP_404_NOT_FOUND)
         return ideas
 
+    def get_by_name(self, user_id: int, name: str) -> List[tables.Idea]:
+        ideas = (
+            self.session
+            .query(tables.Idea)
+            .filter(
+                tables.Idea.user_id == user_id,
+                tables.Idea.idea_name == name
+            )
+            .order_by(
+                tables.Idea.data_create.desc(),
+                tables.Idea.id.desc(),
+            )
+            .first()
+        )
+        if not ideas:
+            raise HTTPException(status.HTTP_404_NOT_FOUND)
+        return ideas
+
+
     def get(
         self,
         user_id: int,
@@ -80,11 +99,11 @@ class IdeasService:
             user_id: int,
             idea_data: models.IdeaCreate,
     ) -> tables.Idea:
+
         idea = tables.Idea(
             idea_name = idea_data.idea_name,
             idea_text = idea_data.idea_text,
             data_create = idea_data.data_create,
-            #child_id = idea_data.child_id,
             user_id=user_id,
         )
         self.tag_get_and_create(
@@ -110,15 +129,22 @@ class IdeasService:
     ) -> tables.Idea:
         idea = self._get(user_id, idea_id)
         for field, value in idea_data:
-            if field != 'tags':
-                setattr(idea, field, value)
-            else:
+            if field == 'tags':
                 setattr(idea, field, [])
                 self.tag_get_and_create(
-                user_id,
-                idea_data,
-                idea,
-            )
+                    user_id,
+                    idea_data,
+                    idea,
+                )
+            elif field == 'children':
+                setattr(idea, field, [])
+                self.children_get_and_create(
+                    user_id,
+                    idea_data,
+                    idea,
+                )
+            else:
+                setattr(idea, field, value)
         self.session.commit()
         return idea
 
@@ -150,10 +176,7 @@ class IdeasService:
             user_id: int,
             idea_data: models.IdeaCreate,
             idea: tables.Idea,
-            name: str,
-            list_names: list,
-            table_name: tables,
-    ) -> tables.Idea:
+                ) -> tables.Idea:
         tags = [i.tag_name for i in idea_data.tags]
         for tag_name in tags:
             # Определим существует ли тег
@@ -180,12 +203,12 @@ class IdeasService:
     def children_get_and_create(
             self,
             user_id: int,
-            idea_data: models.IdeaCreate,
+            idea_data: models.IdeaSchema,
             idea: tables.Idea,
     ) -> tables.Idea:
         children = [i.idea_name for i in idea_data.children]
         for idea_name in children:
-            # Определим существует ли тег
+            # Определим существует ли заметка
             idea_in_db = (
                 self.session
                 .query(tables.Idea)
@@ -200,9 +223,18 @@ class IdeasService:
                 idea.children.append(idea_in_db)
             # если не существует, то добавляем пустую идею в таблицу идей
             else:
-                c = tables.Idea(user_id=user_id, idea_name=idea_name, idea_text='', data_create=idea_data.data_create)
+                if isinstance(idea_data, models.IdeaCreate):
+                    data_create = idea_data.data_create
+                else:
+                    data_create = idea_data.data_update
+                c = tables.Idea(user_id=user_id, idea_name=idea_name, idea_text='', data_create=data_create)
                 self.session.add(c)
                 self.session.flush()
                 idea.children.append(c)
         return idea
 
+    def check_unique_name(self, ideas): #проверка что имя заметки уникально для выбранного пользователя
+        pass
+
+    def check_not_refer_to_itself(self): #проверка что заметка не ссылается сама на себя
+        pass

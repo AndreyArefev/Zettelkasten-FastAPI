@@ -46,7 +46,7 @@ class Tag(Base):
     __tablename__ = 'tags'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), index=True)
-    tag_name = Column(String(100))
+    tag_name = Column(String(255))
     ideas = relationship("Idea", secondary="idea_tags", back_populates='tags')
 
 
