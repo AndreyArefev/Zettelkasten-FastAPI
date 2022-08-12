@@ -99,7 +99,8 @@ class IdeasService:
             user_id: int,
             idea_data: models.IdeaCreate,
     ) -> tables.Idea:
-
+        self.check_unique_name(idea_data.idea_name)
+        self.check_not_refer_to_itself(idea_data.idea_name, idea_data.children)
         idea = tables.Idea(
             idea_name = idea_data.idea_name,
             idea_text = idea_data.idea_text,
@@ -128,6 +129,8 @@ class IdeasService:
         idea_data: models.IdeaUpdate,
     ) -> tables.Idea:
         idea = self._get(user_id, idea_id)
+        self.check_unique_name(idea_data.idea_name, idea_id)
+        self.check_not_refer_to_itself(idea_data.idea_name, idea_data.children)
         for field, value in idea_data:
             if field == 'tags':
                 setattr(idea, field, [])
@@ -233,8 +236,28 @@ class IdeasService:
                 idea.children.append(c)
         return idea
 
-    def check_unique_name(self, ideas): #проверка что имя заметки уникально для выбранного пользователя
-        pass
+    def check_unique_name(self, idea_name: str, idea_id = 0): #проверка что имя заметки уникально для выбранного пользователя
+        checking = (
+            self.session
+            .query(tables.User)
+            .filter(
+                tables.Idea.idea_name == idea_name,
+                tables.Idea.id != idea_id,
+            )
+            .first()
+        )
+        if checking:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail='Заметка с таким именем уже существует',
+                               )
+        return checking
 
-    def check_not_refer_to_itself(self): #проверка что заметка не ссылается сама на себя
-        pass
+    def check_not_refer_to_itself(self, idea_name: str, children: List[str]): #проверка что заметка не ссылается сама на себя
+        child = [i.idea_name for i in children]
+        for child_name in child:
+            print(child_name)
+            if idea_name == child_name:
+                raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                    detail='Заметка не может ссылаться сама на себя',
+                                    )
+        return idea_name
