@@ -261,3 +261,4 @@ class IdeasService:
                                     detail='Заметка не может ссылаться сама на себя',
                                     )
         return idea_name
+

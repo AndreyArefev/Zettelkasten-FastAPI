@@ -99,8 +99,6 @@ class AuthService:
             username=user_data.username,
             password_hash=self.hash_password(user_data.password),
             )
-
-
         self.session.add(user)
         self.session.commit()
         return self.create_token(user)
@@ -157,3 +155,13 @@ class AuthService:
             headers = {'WWW-Authenticate': 'Bearer'},
             )
         return checking_username, checking_email
+
+    @staticmethod
+    def get_user_by_email(email: str, db: Session):
+        user = (
+            db
+            .query(tables.User)
+            .filter(tables.User.email == email)
+            .first()
+        )
+        return user
