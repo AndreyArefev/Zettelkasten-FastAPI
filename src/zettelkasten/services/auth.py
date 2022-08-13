@@ -59,7 +59,6 @@ class AuthService:
             raise exception from None
 
         user_data = payload.get('user')
-
         try:
             user = models.User.parse_obj(user_data)
         except ValidationError:
@@ -88,7 +87,6 @@ class AuthService:
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
-
     def register_new_user(
         self,
         user_data: models.UserCreate,
@@ -113,20 +111,16 @@ class AuthService:
             detail='Incorrect username or password',
             headers={'WWW-Authenticate': 'Bearer'},
         )
-
         user = (
             self.session
             .query(tables.User)
             .filter(tables.User.username == username)
             .first()
         )
-
         if not user:
             raise exception
-
         if not self.verify_password(password, user.password_hash):
             raise exception
-
         return self.create_token(user)
 
     def checking_for_unique(self,
@@ -156,12 +150,3 @@ class AuthService:
             )
         return checking_username, checking_email
 
-    @staticmethod
-    def get_user_by_email(email: str, db: Session):
-        user = (
-            db
-            .query(tables.User)
-            .filter(tables.User.email == email)
-            .first()
-        )
-        return user

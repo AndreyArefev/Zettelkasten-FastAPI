@@ -117,7 +117,6 @@ def update_idea(
         idea_data,
     )
 
-
 @router.delete(
     '/{idea_id}',
     status_code=status.HTTP_204_NO_CONTENT,

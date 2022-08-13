@@ -54,6 +54,3 @@ idea_tags = Table('idea_tags', Base.metadata,
     Column('id_idea', ForeignKey('ideas.id'), primary_key=True),
     Column('id_tags', ForeignKey('tags.id'), primary_key=True)
 )
-
-
-

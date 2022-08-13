@@ -5,20 +5,17 @@ from datetime import date
 
 class TagBase(BaseModel):
     tag_name: str
-
     class Config:
         orm_mode = True
 
 class Tag(TagBase):
     id: int
-
     class Config:
         orm_mode = True
 
 
 class IdeaBase(BaseModel):
     idea_name: str
-
     class Config:
         orm_mode = True
 
@@ -42,15 +39,7 @@ class Idea(IdeaUpdate, IdeaCreate):
     id: int
 
 
-
 class TagSchema(TagBase):
     ideas: List[Idea]
-
     class Config:
         orm_mode = True
-
-
-
-
-
-
